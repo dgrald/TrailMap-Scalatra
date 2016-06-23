@@ -1,5 +1,7 @@
 package org.dgrald.trails
 
+import java.util.UUID
+
 import com.mongodb.casbah.Imports
 import com.mongodb.casbah.Imports._
 
@@ -43,7 +45,7 @@ private class TrailStoreImplementation(database: MongoDB) extends TrailStore {
   override def getTrail(id: String): Option[Trail] = ???
 
   override def saveTrail(trail: Trail): Trail = {
-    trailsCollection.insert(MongoDBObject("name" -> trail.name) ++ ("location" -> MongoDBObject("longitude" -> trail.location.longitude, "latitude" -> trail.location.latitude)))
+    trailsCollection.insert(MongoDBObject("_id" -> trail.id, "name" -> trail.name) ++ ("location" -> MongoDBObject("longitude" -> trail.location.longitude, "latitude" -> trail.location.latitude)))
     trail
   }
 
@@ -52,10 +54,7 @@ private class TrailStoreImplementation(database: MongoDB) extends TrailStore {
   private def convertToTrail(next: Imports.DBObject): Trail = {
     val name = next.getAs[String]("name").get
     val locationMap = next.getAs[Map[String, Double]]("location").get
-    new Trail(name, new Location(latitude = locationMap("latitude"), longitude = locationMap("longitude")))
+    val id = next.getAs[UUID]("_id").get
+    new Trail(id, name, new Location(latitude = locationMap("latitude"), longitude = locationMap("longitude")))
   }
 }
-
-sealed class Trail(val name: String, val location: Location)
-
-sealed class Location(val longitude: Double, val latitude: Double)

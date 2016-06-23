@@ -66,6 +66,6 @@ class TrailMap(trailStore: TrailStore) extends TrailMapStack with JacksonJsonSup
     if(longitude == JNothing || latitude == JNothing) {
       return None
     }
-    Some(new Trail(nameValue, new Location(longitude.extract[String].toDouble, latitude.extract[String].toDouble)))
+    Some(Trail(nameValue, new Location(longitude.extract[String].toDouble, latitude.extract[String].toDouble)))
   }
 }

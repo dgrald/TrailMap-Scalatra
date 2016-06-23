@@ -14,14 +14,14 @@ class TrailMapSpec extends MutableScalatraSpec {
   addServlet(new TrailMap(trailStoreStub), "/*")
 
   val trail1Name = "Trail 1"
-  val trail1 = new Trail(trail1Name, new Location(22.55, 25.22))
+  val trail1 = Trail(trail1Name, new Location(22.55, 25.22))
 
   val trail2Name = "Trail 2"
-  val trail2 = new Trail(trail2Name, new Location(22.22, 23.33))
+  val trail2 = Trail(trail2Name, new Location(22.22, 23.33))
   val allTrails = List(trail1, trail2)
 
   val trail3Name = "Trail 3"
-  val trail3 = new Trail(trail3Name, new Location(33.33, 34.44))
+  val trail3 = Trail(trail3Name, new Location(33.33, 34.44))
 
   val newTrailJObject = ("name" -> trail3Name) ~ ("location" -> (("longitude" -> "22") ~ ("latitude" -> "33")))
   val newTrailJson = compact(render(newTrailJObject))
