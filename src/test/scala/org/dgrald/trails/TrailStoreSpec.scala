@@ -1,6 +1,6 @@
 package org.dgrald.trails
 
-import org.mongodb.scala.{MongoDatabase, MongoClient}
+import com.mongodb.casbah.Imports._
 import org.specs2.mutable._
 
 /**
@@ -17,11 +17,11 @@ class TrailStoreSpec extends Specification {
 }
 
 trait TestDatabase extends Before {
-  val mongoClient: MongoClient = MongoClient()
-  val database: MongoDatabase = mongoClient.getDatabase("test")
+  val mongoClient = MongoClient("localhost", 27017)
+  val database = mongoClient("test")
   lazy val db = TrailStore.apply(database)
 
   def before = {
-    db.getTrails.foreach(t => db.deleteTrail(t))
+    database.dropDatabase()
   }
 }

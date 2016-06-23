@@ -1,7 +1,6 @@
 package org.dgrald.trails
 
-import org.mongodb.scala.bson.collection.immutable.Document
-import org.mongodb.scala.{MongoDatabase, MongoClient}
+import com.mongodb.casbah.Imports._
 
 /**
   * Created by dylangrald on 6/21/16.
@@ -18,26 +17,30 @@ trait TrailStore {
 
 object TrailStore {
   def apply(): TrailStore = {
-    val mongoClient: MongoClient = MongoClient()
-    val database: MongoDatabase = mongoClient.getDatabase("production")
+    val mongoClient = MongoClient("localhost", 27017)
+    val database = mongoClient("production")
     new TrailStoreImplementation(database)
   }
 
-  def apply(database: MongoDatabase): TrailStore = {
+  def apply(database: MongoDB): TrailStore = {
     new TrailStoreImplementation(database)
   }
 }
 
-private class TrailStoreImplementation(database: MongoDatabase) extends TrailStore {
+private class TrailStoreImplementation(database: MongoDB) extends TrailStore {
 
-  val trailsCollection = database.getCollection("trails")
+  val trailsCollection = database("trails")
 
-  override def getTrails: Seq[Trail] = ???
+  override def getTrails: Seq[Trail] = {
+    val cursor = trailsCollection.find
+    for ( c <- cursor ) println( "WTF\n\n\n\n\n\n\n\n" + c )
+    List(new Trail("", new Location(22,22)))
+  }
 
   override def getTrail(id: String): Option[Trail] = ???
 
   override def saveTrail(trail: Trail): Trail = {
-    trailsCollection.insertOne(Document())
+    trailsCollection.insert(MongoDBObject("hello" -> "world"))
     trail
   }
 
