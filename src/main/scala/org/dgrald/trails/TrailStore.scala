@@ -1,5 +1,6 @@
 package org.dgrald.trails
 
+import com.mongodb.casbah.Imports
 import com.mongodb.casbah.Imports._
 
 /**
@@ -33,18 +34,26 @@ private class TrailStoreImplementation(database: MongoDB) extends TrailStore {
 
   override def getTrails: Seq[Trail] = {
     val cursor = trailsCollection.find
-    for ( c <- cursor ) println( "WTF\n\n\n\n\n\n\n\n" + c )
-    List(new Trail("", new Location(22,22)))
+    val allTrails = for {
+      next <- cursor
+    } yield convertToTrail(next)
+    allTrails.toList
   }
 
   override def getTrail(id: String): Option[Trail] = ???
 
   override def saveTrail(trail: Trail): Trail = {
-    trailsCollection.insert(MongoDBObject("hello" -> "world"))
+    trailsCollection.insert(MongoDBObject("name" -> trail.name) ++ ("location" -> MongoDBObject("longitude" -> trail.location.longitude, "latitude" -> trail.location.latitude)))
     trail
   }
 
   override def deleteTrail(trail: Trail): Unit = ???
+
+  private def convertToTrail(next: Imports.DBObject): Trail = {
+    val name = next.getAs[String]("name").get
+    val locationMap = next.getAs[Map[String, Double]]("location").get
+    new Trail(name, new Location(latitude = locationMap("latitude"), longitude = locationMap("longitude")))
+  }
 }
 
 sealed class Trail(val name: String, val location: Location)
