@@ -30,7 +30,7 @@ class TrailStoreSpec extends Specification {
 
 trait TestDatabase extends Before {
   val mongoClient = MongoClient("localhost", 27017)
-  val database = mongoClient("test")
+  val database = mongoClient("test-will-be-dropped")
   lazy val db = TrailStore.apply(database)
 
   def before = {

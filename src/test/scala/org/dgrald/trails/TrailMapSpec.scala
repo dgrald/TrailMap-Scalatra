@@ -27,7 +27,7 @@ class TrailMapSpec extends MutableScalatraSpec {
   val newTrailJson = compact(render(newTrailJObject))
 
   "GET /trails/:id" should {
-    "return status 200 and the id that matches the input id" in {
+    "return status 200 and the trail that matches the input id" in {
       get("/trails/2") {
         status must_== 200
         val jsonBody = parse(body)
