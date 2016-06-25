@@ -17,7 +17,8 @@ class TrailMapSpec extends MutableScalatraSpec {
   val trail1 = Trail(trail1Name, new Location(22.55, 25.22))
 
   val trail2Name = "Trail 2"
-  val trail2 = Trail(trail2Name, new Location(22.22, 23.33))
+  val trail2Id = "trail2Id"
+  val trail2 = new Trail(trail2Id, trail2Name, new Location(22.22, 23.33))
   val allTrails = List(trail1, trail2)
 
   val trail3Name = "Trail 3"
@@ -28,7 +29,7 @@ class TrailMapSpec extends MutableScalatraSpec {
 
   "GET /trails/:id" should {
     "return status 200 and the trail that matches the input id" in {
-      get("/trails/2") {
+      get("/trails/" + trail2Id.toString) {
         status must_== 200
         val jsonBody = parse(body)
         jsonBody \ "name" must_== JString(trail2.name)
@@ -39,7 +40,7 @@ class TrailMapSpec extends MutableScalatraSpec {
     }
 
     "return a 404 when the specified id does not exist" in {
-      get("/trails/idThatDoesNotExist") {
+      get("/trails/randomIdDoesNotExist") {
         status must_== 404
       }
     }
@@ -99,12 +100,14 @@ class TrailMapSpec extends MutableScalatraSpec {
     }
 
     override def getTrail(id: String): Option[Trail] = id match {
-      case "2" => Some(trail2)
+      case `trail2Id` => Some(trail2)
       case _ => None
     }
 
     override def saveTrail(trail: Trail): Trail = trail3
 
     override def deleteTrail(trail: Trail): Unit = ???
+
+    override def updateTrail(trail: Trail): Trail = ???
   }
 }
