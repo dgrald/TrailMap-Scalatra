@@ -39,8 +39,19 @@ class TrailMap(trailStore: TrailStore) extends TrailMapStack with JacksonJsonSup
     new JArray(trailJson.toList)
   }
 
+  delete("/trails/:id") {
+    val id = params("id")
+    val trailOption = trailStore.getTrail(id)
+    trailOption match {
+      case Some(trail) => {
+        trailStore.deleteTrail(trail)
+        NoContent()
+      }
+    }
+  }
+
   private def createTrailJson(trail: Trail) = {
-    ("name" -> trail.name) ~ createLocationJson(trail)
+    ("name" -> trail.name) ~ ("id" -> trail.id) ~ createLocationJson(trail)
   }
 
   private def createLocationJson(trail: Trail) = {

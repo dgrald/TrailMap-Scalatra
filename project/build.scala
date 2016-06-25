@@ -32,7 +32,8 @@ object TrailMapBuild extends Build {
         "org.eclipse.jetty" % "jetty-webapp" % "9.2.15.v20160210" % "container",
         "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided",
         "org.json4s" %% "json4s-jackson" % "3.3.0",
-        "org.mongodb" %% "casbah" % "3.1.1"
+        "org.mongodb" %% "casbah" % "3.1.1",
+        "org.scalamock" %% "scalamock-specs2-support" % "3.2.2" % "test"
       ),
       scalateTemplateConfig in Compile <<= (sourceDirectory in Compile){ base =>
         Seq(
