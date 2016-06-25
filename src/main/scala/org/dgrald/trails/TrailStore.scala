@@ -13,7 +13,7 @@ trait TrailStore {
 
   def saveTrail(trail: Trail): Trail
 
-  def deleteTrail(trail: Trail): Boolean
+  def deleteTrail(trail: Trail): Unit
 
   def updateTrail(trail: Trail): Trail
 }
@@ -55,9 +55,8 @@ private class TrailStoreImplementation(database: MongoDB) extends TrailStore {
     trail
   }
 
-  override def deleteTrail(trail: Trail): Boolean = {
+  override def deleteTrail(trail: Trail): Unit = {
     trailsCollection.remove(MongoDBObject("_id" -> trail.id))
-    true
   }
 
   override def updateTrail(trail: Trail): Trail = {
@@ -87,5 +86,4 @@ private class TrailStoreImplementation(database: MongoDB) extends TrailStore {
     val id = next.getAs[String]("_id").get
     new Trail(id, name, new Location(latitude = locationMap("latitude"), longitude = locationMap("longitude")))
   }
-
 }

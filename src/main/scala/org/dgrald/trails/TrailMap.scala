@@ -47,11 +47,12 @@ class TrailMap(trailStore: TrailStore) extends TrailMapStack with JacksonJsonSup
         trailStore.deleteTrail(trail)
         NoContent()
       }
+      case None => NotFound()
     }
   }
 
   private def createTrailJson(trail: Trail) = {
-    ("name" -> trail.name) ~ ("id" -> trail.id) ~ createLocationJson(trail)
+    ("id" -> trail.id) ~ ("name" -> trail.name) ~ createLocationJson(trail)
   }
 
   private def createLocationJson(trail: Trail) = {

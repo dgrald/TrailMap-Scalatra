@@ -12,7 +12,7 @@ import org.specs2.specification.BeforeEach
 class TrailStoreSpec extends Specification with BeforeEach {
 
   val mongoClient = MongoClient("localhost", 27017)
-  val database = mongoClient("test-will-be-dropped")
+  val database = mongoClient("test-db-will-be-dropped")
   lazy val db = TrailStore.apply(database)
 
   def before = {

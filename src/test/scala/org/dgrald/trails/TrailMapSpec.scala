@@ -1,5 +1,7 @@
 package org.dgrald.trails
 
+import java.util.UUID
+
 import org.json4s.JsonDSL._
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
@@ -10,7 +12,7 @@ class TrailMapSpec extends MutableScalatraSpec with Mockito {
 
   implicit val jsonFormats = DefaultFormats
 
-  val idOfTrailThatDoesNotExist = "randomIdDoesNotExist"
+  val idOfTrailThatDoesNotExist = UUID.randomUUID().toString
 
   val trail1Name = "Trail 1"
   val trail1 = Trail(trail1Name, new Location(22.55, 25.22))
@@ -111,7 +113,12 @@ class TrailMapSpec extends MutableScalatraSpec with Mockito {
         status must_== 204
         there was one(trailStoreMock).deleteTrail(trail2)
       }
+    }
 
+    "return a 404 if the specified trail is not present" in {
+      delete("/trails/" + idOfTrailThatDoesNotExist) {
+        status must_== 404
+      }
     }
   }
 }
