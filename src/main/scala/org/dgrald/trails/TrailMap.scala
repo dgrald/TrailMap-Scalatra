@@ -11,14 +11,11 @@ class TrailMap(trailStore: TrailStore) extends TrailMapStack with JacksonJsonSup
   implicit val jsonFormats = DefaultFormats
 
   post("/trails") {
-    val trailOption = getTrailFromJson(request.body)
-    trailOption match {
-      case Some(validTrail) => {
-        val savedTrail = trailStore.saveTrail(validTrail)
-        createTrailJson(savedTrail)
-      }
-      case _ => BadRequest()
-    }
+    persistTrail(trailStore.saveTrail)
+  }
+
+  put("/trails") {
+    persistTrail(trailStore.updateTrail)
   }
 
   get("/trails/:id") {
@@ -79,5 +76,16 @@ class TrailMap(trailStore: TrailStore) extends TrailMapStack with JacksonJsonSup
       return None
     }
     Some(Trail(nameValue, new Location(longitude.extract[String].toDouble, latitude.extract[String].toDouble)))
+  }
+
+  private def persistTrail(persistenceFunction: (Trail) => Trail) = {
+    val trailOption = getTrailFromJson(request.body)
+    trailOption match {
+      case Some(validTrail) => {
+        val savedTrail = persistenceFunction(validTrail)
+        createTrailJson(savedTrail)
+      }
+      case _ => BadRequest()
+    }
   }
 }

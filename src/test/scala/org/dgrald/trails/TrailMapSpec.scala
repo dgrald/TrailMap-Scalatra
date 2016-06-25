@@ -27,10 +27,16 @@ class TrailMapSpec extends MutableScalatraSpec with Mockito {
   val allTrails = List(trail1, trail2)
 
   val trailStoreMock = mock[TrailStore]
-  trailStoreMock.getTrail(trail2Id).returns(Some(trail2))
-  trailStoreMock.getTrail(idOfTrailThatDoesNotExist).returns(None)
-  trailStoreMock.getTrails.returns(allTrails)
-  doReturn(trail3).when(trailStoreMock).saveTrail(any[Trail])
+
+  private def setUpTrailStoreMock: Any = {
+    trailStoreMock.getTrail(trail2Id).returns(Some(trail2))
+    trailStoreMock.getTrail(idOfTrailThatDoesNotExist).returns(None)
+    trailStoreMock.getTrails.returns(allTrails)
+    doReturn(trail3).when(trailStoreMock).saveTrail(any[Trail])
+    doReturn(trail3).when(trailStoreMock).updateTrail(any[Trail])
+  }
+
+  setUpTrailStoreMock
 
   val servlet = new TrailMap(trailStoreMock)
 
@@ -102,6 +108,46 @@ class TrailMapSpec extends MutableScalatraSpec with Mockito {
 
     "return status 400 when the JSON of the new trail does not have a latitude" in {
       post("/trails", compact(render(("name" -> "some name") ~ ("location" -> ("longitude" -> "22"))))) {
+        status must_== 400
+      }
+    }
+  }
+
+  "PUT /trails" should {
+    val newTrailJObject = ("name" -> trail3Name) ~ ("location" -> (("longitude" -> "22") ~ ("latitude" -> "33")))
+    val newTrailJson = compact(render(newTrailJObject))
+
+    "return status 200 and the JSON of the new trail when sent a valid trail JSON" in {
+      put("/trails", newTrailJson) {
+        status must_== 200
+        val jsonBody = parse(body)
+        jsonBody \ "name" must_== JString(trail3Name)
+        val location = jsonBody \ "location"
+        location \ "longitude" must_== JDouble(trail3.location.longitude)
+        location \ "latitude" must_== JDouble(trail3.location.latitude)
+      }
+    }
+
+    "return status 400 when the JSON of the new trail does not have a location" in {
+      put("/trails", compact(render(newTrailJObject \ "name"))) {
+        status must_== 400
+      }
+    }
+
+    "return status 400 when the JSON of the new trail does not have a name" in {
+      put("/trails", compact(render(newTrailJObject \ "location"))) {
+        status must_== 400
+      }
+    }
+
+    "return status 400 when the JSON of the new trail does not have a longitude" in {
+      put("/trails", compact(render(("name" -> "some name") ~ ("location" -> ("latitude" -> "44"))))) {
+        status must_== 400
+      }
+    }
+
+    "return status 400 when the JSON of the new trail does not have a latitude" in {
+      put("/trails", compact(render(("name" -> "some name") ~ ("location" -> ("longitude" -> "22"))))) {
         status must_== 400
       }
     }
