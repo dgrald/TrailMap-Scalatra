@@ -12,5 +12,3 @@ object Trail {
     new Trail(UUID.randomUUID().toString, name, location)
   }
 }
-
-sealed class Location(val longitude: Double, val latitude: Double)
