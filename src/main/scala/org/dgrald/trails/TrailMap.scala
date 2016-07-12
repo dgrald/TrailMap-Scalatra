@@ -23,7 +23,7 @@ class TrailMap(trailStore: TrailStore) extends TrailMapStack with JacksonJsonSup
     val trailOption = trailStore.getTrail(id)
     trailOption match {
       case Some(trail) => createTrailJson(trail)
-      case None => NotFound()
+      case None => NotFound(s"Could not find a trail with the ID ${id}")
     }
   }
 
@@ -44,7 +44,7 @@ class TrailMap(trailStore: TrailStore) extends TrailMapStack with JacksonJsonSup
         trailStore.deleteTrail(trail)
         NoContent()
       }
-      case None => NotFound()
+      case None => NotFound(s"Could not find a trail with the ID ${id}")
     }
   }
 

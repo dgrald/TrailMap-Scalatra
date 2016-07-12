@@ -58,6 +58,7 @@ class TrailMapSpec extends MutableScalatraSpec with Mockito {
     "return a 404 when the specified id does not exist" in {
       get("/trails/" + idOfTrailThatDoesNotExist) {
         status must_== 404
+        body must_== s"Could not find a trail with the ID ${idOfTrailThatDoesNotExist}"
       }
     }
   }
@@ -164,6 +165,7 @@ class TrailMapSpec extends MutableScalatraSpec with Mockito {
     "return a 404 if the specified trail is not present" in {
       delete("/trails/" + idOfTrailThatDoesNotExist) {
         status must_== 404
+        body must_== s"Could not find a trail with the ID ${idOfTrailThatDoesNotExist}"
       }
     }
   }
