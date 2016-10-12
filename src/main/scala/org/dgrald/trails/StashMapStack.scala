@@ -3,7 +3,7 @@ package org.dgrald.trails
 import org.scalatra._
 import org.scalatra.scalate.ScalateSupport
 
-trait TrailMapStack extends ScalatraServlet with ScalateSupport with CorsSupport {
+trait StashMapStack extends ScalatraServlet with ScalateSupport with CorsSupport {
 
   notFound {
     // remove content type in case it was set through an action

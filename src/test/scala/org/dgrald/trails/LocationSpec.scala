@@ -8,22 +8,22 @@ import org.specs2.mutable.Specification
 class LocationSpec extends Specification {
 
   "Two locations with the same point should be equal" in {
-    val longitude = Some.decimal()
-    val latitude = Some.decimal()
+    val longitude = AnyRandom.decimal()
+    val latitude = AnyRandom.decimal()
 
-    val location1 = new Location(longitude, latitude)
-    val location2 = new Location(longitude, latitude)
+    val location1 = Location(longitude, latitude)
+    val location2 = Location(longitude, latitude)
 
     location1 must_== location2
   }
 
   "Two locations that are not the same point should not be equal" in {
-    val longitude = Some.decimal()
-    val latitude = Some.decimal()
+    val longitude = AnyRandom.decimal()
+    val latitude = AnyRandom.decimal()
 
-    val location1 = new Location(longitude, latitude)
-    val location2 = new Location(longitude, latitude + 1)
-    val location3 = new Location(longitude + 1, latitude)
+    val location1 = Location(longitude, latitude)
+    val location2 = Location(longitude, latitude + 1)
+    val location3 = Location(longitude + 1, latitude)
 
     location1 must_!= location2
     location1 must_!= location2

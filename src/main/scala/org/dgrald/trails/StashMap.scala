@@ -6,29 +6,29 @@ import org.scalatra.json._
 import org.json4s._
 import org.json4s.JsonDSL._
 
-class TrailMap(trailStore: TrailStore) extends TrailMapStack with JacksonJsonSupport {
+class StashMap(stashStore: StashStore) extends StashMapStack with JacksonJsonSupport {
 
   implicit val jsonFormats = DefaultFormats
 
   post("/trails") {
-    persistTrail(trailStore.saveTrail)
+    persistTrail(stashStore.saveTrail)
   }
 
   put("/trails") {
-    persistTrail(trailStore.updateTrail)
+    persistTrail(stashStore.updateTrail)
   }
 
   get("/trails/:id") {
     val id = params("id")
-    val trailOption = trailStore.getTrail(id)
+    val trailOption = stashStore.getTrail(id)
     trailOption match {
       case Some(trail) => createTrailJson(trail)
-      case None => NotFound(s"Could not find a trail with the ID ${id}")
+      case None => NotFound(s"Could not find a trail with the ID $id")
     }
   }
 
   get("/trails") {
-    val allTrails = trailStore.getTrails
+    val allTrails = stashStore.getTrails
     val trailJson = for {
       trail <- allTrails
     } yield createTrailJson(trail)
@@ -38,25 +38,27 @@ class TrailMap(trailStore: TrailStore) extends TrailMapStack with JacksonJsonSup
 
   delete("/trails/:id") {
     val id = params("id")
-    val trailOption = trailStore.getTrail(id)
+    val trailOption = stashStore.getTrail(id)
     trailOption match {
       case Some(trail) => {
-        trailStore.deleteTrail(trail)
+        stashStore.deleteTrail(trail)
         NoContent()
       }
       case None => NotFound(s"Could not find a trail with the ID ${id}")
     }
   }
 
-  private def createTrailJson(trail: Trail) = {
+  private def createTrailJson(trail: Stash) = {
     ("id" -> trail.id) ~ ("name" -> trail.name) ~ createLocationJson(trail)
   }
 
-  private def createLocationJson(trail: Trail) = {
-    "location" -> (("longitude" -> trail.location.longitude) ~ ("latitude" -> trail.location.latitude))
+  private def createLocationJson(trail: Stash) = {
+    trail.location match {
+      case point: PointLocation => "location" -> (("longitude" -> point.longitude) ~ ("latitude" -> point.latitude))
+    }
   }
 
-  private def getTrailFromJson(requestJson: String): Option[Trail] = {
+  private def getTrailFromJson(requestJson: String): Option[Stash] = {
     val parsedJson = parse(requestJson)
     val name = parsedJson \ "name"
 
@@ -75,10 +77,10 @@ class TrailMap(trailStore: TrailStore) extends TrailMapStack with JacksonJsonSup
     if(longitude == JNothing || latitude == JNothing) {
       return None
     }
-    Some(Trail(nameValue, new Location(longitude.extract[String].toDouble, latitude.extract[String].toDouble)))
+    Some(Stash(nameValue, Location(longitude.extract[String].toDouble, latitude.extract[String].toDouble)))
   }
 
-  private def persistTrail(persistenceFunction: (Trail) => Trail) = {
+  private def persistTrail(persistenceFunction: (Stash) => Stash) = {
     val trailOption = getTrailFromJson(request.body)
     trailOption match {
       case Some(validTrail) => {

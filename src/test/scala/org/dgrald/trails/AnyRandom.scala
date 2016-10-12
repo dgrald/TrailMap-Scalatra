@@ -5,7 +5,7 @@ import scala.util.Random
 /**
   * Created by dylangrald on 7/11/16.
   */
-object Some {
+object AnyRandom {
   def decimal(): Double = {
     new Random().nextDouble()
   }
