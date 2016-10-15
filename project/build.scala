@@ -1,3 +1,4 @@
+import com.typesafe.sbt.packager.archetypes.JavaAppPackaging
 import sbt._
 import Keys._
 import org.scalatra.sbt._
@@ -32,7 +33,6 @@ object TrailMapBuild extends Build {
         "org.eclipse.jetty" % "jetty-webapp" % "9.1.5.v20140505" % "compile;container",
         "org.eclipse.jetty" % "jetty-plus" % "9.1.5.v20140505" % "compile;container",
         "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided",
-        "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided",
         "org.json4s" %% "json4s-jackson" % "3.3.0",
         "org.mongodb" %% "casbah" % "3.1.1",
         "org.scalamock" %% "scalamock-specs2-support" % "3.2.2" % "test"
@@ -50,5 +50,5 @@ object TrailMapBuild extends Build {
         )
       }
     )
-  ).enablePlugins(JettyPlugin)
+  ).enablePlugins(JavaAppPackaging, JettyPlugin)
 }
