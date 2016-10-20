@@ -20,21 +20,22 @@ class JsonConverterSpec extends Specification {
   val pointLatitude = 44
   val pointLocation = Location(longitude = pointLongitude, latitude = pointLatitude)
   val pointStash = Stash(pointStashName, pointLocation)
-  val pointStashJson = jsonConverter.createTrailJson(pointStash)
+  val pointStashJson = parse(s"""{"name": "$pointStashName", "location": {"type": "Point", "coordinates": [$pointLongitude, $pointLatitude]}}"""")
 
   val lineStashName = AnyRandom.string()
   val lineStashPoints = List((1.1, 1.1), (2.2, 2.2), (3.3, 3.3))
   val lineStashLocation = Location(lineStashPoints)
   val lineStash = Stash(lineStashName, lineStashLocation)
-  val lineStashJson = jsonConverter.createTrailJson(lineStash)
+  val lineStashPointJsonArray = lineStashPoints.map(e => e match {case (first, second) => s"[$first, $second]"}).mkString(", ")
+  val lineStashJson = parse(s"""{"name": "$lineStashName", "location": {"type": "LineString", "coordinates": [$lineStashPointJsonArray]}}""")
 
   "Should convert a stash to JSON given a point location stash" in {
     val json = jsonConverter.createTrailJson(pointStash)
 
     (json \ "name").extract[String] must_== pointStashName
     val jsonLocation = json \ "location"
-    (jsonLocation \ "longitude").extract[Double] must_== pointLongitude
-    (jsonLocation \ "latitude").extract[Double] must_== pointLatitude
+    (jsonLocation \ "type").extract[String] must_== "Point"
+    (jsonLocation \ "coordinates").extract[List[Double]] must_== List(pointLongitude, pointLatitude)
   }
 
   "Should convert a stash to JSON given a line location stash" in {
@@ -42,7 +43,8 @@ class JsonConverterSpec extends Specification {
 
     (json \ "name").extract[String] must_== lineStashName
     val jsonLocation = json \ "location"
-    val points = jsonLocation.extract[List[List[Double]]]
+    (jsonLocation \ "type").extract[String] must_== "LineString"
+    val points = (jsonLocation \ "coordinates").extract[List[List[Double]]]
     points.foreach(d => d.length must_== 2)
     val tuples = points.map(d => (d.head, d.last))
     tuples must_== lineStashPoints
@@ -69,13 +71,12 @@ class JsonConverterSpec extends Specification {
     }
   }
 
-  "Should return None when given no" in {
+  "Should return None when given" in {
     val noName = compact(render(pointStashJson \ "location"))
     val noLocation = compact(render(pointStashJson \ "name"))
-    val noLongitude = compact(render(("name" -> AnyRandom.string()) ~ ("location" -> ("latitude" -> 22))))
-    val noLatitude = compact(render(("name" -> AnyRandom.string()) ~ ("location" -> ("longitude" -> 33))))
+    val invalidCoordinates = compact(render(parse(s"""{"name": "$pointStashName", "location": {"type": "Point", "coordinates": [$pointLongitude]}}"""")))
 
-    Fragment.foreach(List(("name", noName), ("location", noLocation), ("longitude", noLongitude), ("latitude", noLatitude))) {
+    Fragment.foreach(List(("no name", noName), ("no location", noLocation), ("invalid coordinates", invalidCoordinates))) {
       case (testCaseScenario: String, json: String) =>
         s"$testCaseScenario" ! {
           jsonConverter.getTrailFromJson(json) must_== None

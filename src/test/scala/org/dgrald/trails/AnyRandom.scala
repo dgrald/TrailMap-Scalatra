@@ -15,6 +15,6 @@ object AnyRandom {
   def string(): String = {
     (for {
       _ <- 1 to 10
-    } yield random.nextPrintableChar()).mkString("")
+    } yield random.alphanumeric).mkString("")
   }
 }

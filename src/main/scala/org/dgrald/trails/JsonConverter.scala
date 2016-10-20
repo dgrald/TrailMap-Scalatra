@@ -10,7 +10,6 @@ abstract class JsonConverter {
   def getTrailFromJson(requestJson: String): Option[Stash]
 
   def createTrailJson(trail: Stash): JsonAST.JObject
-
 }
 
 object JsonConverter {
@@ -34,9 +33,10 @@ private class JsonConverterImplementation extends JsonConverter {
       return None
     }
 
-    location match {
-      case JArray(something) =>
-        getLineLocation(nameValue, something)
+    val locationType = (location \ "type").extract[String]
+
+    locationType match {
+      case "LineString" => getLineLocation(nameValue, location)
       case _ => getPointLocation(nameValue, location)
     }
   }
@@ -44,30 +44,29 @@ private class JsonConverterImplementation extends JsonConverter {
   override def createTrailJson(trail: Stash): JsonAST.JObject = {
     def createLocationJson(trail: Stash) = {
       trail.location match {
-        case point: PointLocation => "location" -> (("longitude" -> point.longitude) ~ ("latitude" -> point.latitude))
+        case point: PointLocation => "location" -> ("type" -> "Point") ~ ("coordinates" -> JArray(List(JDouble(point.longitude), JDouble(point.latitude))))
         case line: LineLocation =>
           val points = line.linePoints.map(p => p match {case (first: Double, second: Double) => JArray(List(JDouble(first), JDouble(second)))})
-          "location" -> JArray(points)
+          "location" -> ("type" -> "LineString") ~ ("coordinates" -> JArray(points))
       }
     }
 
     ("id" -> trail.id) ~ ("name" -> trail.name) ~ createLocationJson(trail)
   }
 
-  private def getLineLocation(nameValue: String, something: List[JsonAST.JValue]): Some[Stash] = {
-    val points: List[(Double, Double)] = something.map(s => s match {
-      case JArray(List(first: JDouble, second: JDouble)) => (first.num, second.num)
-    })
-    val location = Location(points)
-    Some(Stash(nameValue, location))
+  private def getLineLocation(nameValue: String, inputJson: JValue): Some[Stash] = inputJson \ "coordinates" match {
+    case JArray(coordinates) =>
+      val points: List[(Double, Double)] = coordinates.map(s => s match {
+        case JArray(List(first: JDouble, second: JDouble)) => (first.num, second.num)
+      })
+      val location = Location(points)
+      Some(Stash(nameValue, location))
   }
 
-  private def getPointLocation(nameValue: String, location: JValue): Option[Stash] = {
-    val longitude = location \ "longitude"
-    val latitude = location \ "latitude"
-    if (longitude == JNothing || latitude == JNothing) {
-      return None
+  private def getPointLocation(nameValue: String, location: JValue): Option[Stash] = location \ "coordinates" match {
+    case JArray(coordinates) => coordinates match {
+      case List(longitude, latitude) => Some(Stash(nameValue, Location(longitude.extract[String].toDouble, latitude.extract[String].toDouble)))
+      case _ => None
     }
-    Some(Stash(nameValue, Location(longitude.extract[String].toDouble, latitude.extract[String].toDouble)))
   }
 }
