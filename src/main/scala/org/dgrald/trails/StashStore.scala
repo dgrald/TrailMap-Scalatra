@@ -21,8 +21,8 @@ trait StashStore {
 
 object StashStore {
   def apply(): StashStore = {
-    val mongoClient = MongoClient(MongoClientURI("mongodb://admin:password123@ds059306.mlab.com:59306/heroku_dqm6trvw"))
-    val database = mongoClient("heroku_dqm6trvw")
+    val mongoClient = MongoClient(MongoClientURI("mongodb://admin:password123@ds031617.mlab.com:31617/heroku_b32xmvk7"))
+    val database = mongoClient("heroku_b32xmvk7")
     new StashStoreImplementation(database)
   }
 
