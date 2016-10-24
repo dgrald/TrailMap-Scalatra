@@ -2,6 +2,7 @@ package org.dgrald.trails
 
 import com.mongodb.casbah.Imports
 import com.mongodb.casbah.Imports._
+import org.json4s.jackson.JsonMethods._
 
 /**
   * Created by dylangrald on 6/21/16.
@@ -32,6 +33,7 @@ object StashStore {
 
 private class StashStoreImplementation(database: MongoDB) extends StashStore {
 
+  val jsonConverter = JsonConverter()
   val trailsCollection = database("trails")
 
   override def getTrails: Seq[Stash] = {
@@ -62,12 +64,9 @@ private class StashStoreImplementation(database: MongoDB) extends StashStore {
   override def updateTrail(trail: Stash): Stash = {
     val builder = trailsCollection.initializeOrderedBulkOperation
     val writeRequestBuilder = builder.find(MongoDBObject("_id" -> trail.id))
-    writeRequestBuilder.updateOne($set("name" -> trail.name))
-    trail.location match {
-      case point: PointLocation => {
-        writeRequestBuilder.updateOne($set("location.longitude" -> point.longitude))
-        writeRequestBuilder.updateOne($set("location.latitude" -> point.latitude))
-      }
+    val fields = jsonConverter.createTrailJson(trail).values ++ Map("id" -> trail.id, "_id" -> trail.id)
+    fields.foreach {
+      case (key: String, value: Any) => writeRequestBuilder.update($set(key -> value))
     }
 
     builder.execute()
@@ -76,11 +75,8 @@ private class StashStoreImplementation(database: MongoDB) extends StashStore {
   }
 
   private def convertToDBObject(trail: Stash) = {
-    trail.location match {
-      case point: PointLocation => {
-        MongoDBObject("_id" -> trail.id, "name" -> trail.name) ++ ("location" -> MongoDBObject("longitude" -> point.longitude, "latitude" -> point.latitude))
-      }
-    }
+    val baseObject = MongoDBObject("_id" -> trail.id)
+    baseObject ++ MongoDBObject(compact(render(jsonConverter.createTrailJson(trail))))
   }
 
   private def findTrail(trail: Stash): MongoCursor = {
@@ -89,9 +85,8 @@ private class StashStoreImplementation(database: MongoDB) extends StashStore {
   }
 
   private def convertToTrail(next: Imports.DBObject): Stash = {
-    val name = next.getAs[String]("name").get
-    val locationMap = next.getAs[Map[String, Double]]("location").get
     val id = next.getAs[String]("_id").get
-    new Stash(id, name, Location(latitude = locationMap("latitude"), longitude = locationMap("longitude")))
+    val stash = jsonConverter.getTrailFromJson(next.toString).get
+    new Stash(id, stash.name, stash.location)
   }
 }

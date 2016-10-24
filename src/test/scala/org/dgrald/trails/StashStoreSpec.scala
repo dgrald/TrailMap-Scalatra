@@ -1,5 +1,6 @@
 package org.dgrald.trails
 
+import java.security.SecureRandom
 import java.util.UUID
 
 import com.mongodb.casbah.Imports._
@@ -19,7 +20,7 @@ class StashStoreSpec extends Specification with BeforeEach {
     database.dropDatabase()
   }
 
-  "Adding a new trail should add it to the database correctly" in {
+  "Adding a new trail point should add it to the database correctly" in {
     val newTrailName = "Test"
     val newTrailLat = 22.22
     val newTrailLong = 33.33
@@ -38,7 +39,49 @@ class StashStoreSpec extends Specification with BeforeEach {
 
   }
 
-  "Updating an existing trail should update the correct fields" in {
+  "Adding a new stash line should add it to the database correctly" in {
+    val newTrailName = AnyRandom.string()
+    val trailLine = List((1.0,1.0), (2.0,2.0), (3.0,3.0), (4.0,4.0))
+    val trailLocation = Location(trailLine)
+    val newTrailId = UUID.randomUUID().toString
+    val newTrail = new Stash(newTrailId, newTrailName, trailLocation)
+
+    db.saveTrail(newTrail)
+
+    val addedTrail = db.getTrail(newTrailId).get
+
+    addedTrail.name must_== newTrailName
+    addedTrail.id must_== newTrailId
+    addedTrail.location match {
+      case line: LineLocation =>
+        line.linePoints must_== trailLine
+    }
+  }
+
+  "Updating an existing line trail should update the correct fields" in {
+    val originalTrailName = "Test"
+    val originalTrailLine = List((1.0,1.0), (2.0,2.0), (3.0,3.0), (4.0,4.0))
+    val originalTrailLocation = Location(originalTrailLine)
+    val trailId = UUID.randomUUID().toString
+    db.saveTrail(new Stash(trailId, originalTrailName, Location(originalTrailLine)))
+
+    val newTrailName = "Test 2"
+    val newTrailLat = 55.55
+    val newTrailLong = 66.66
+
+    db.updateTrail(new Stash(trailId, newTrailName, Location(longitude = newTrailLong, latitude = newTrailLat)))
+
+    val updatedTrail = db.getTrail(trailId).get
+    updatedTrail.name must_== newTrailName
+    updatedTrail.id must_== trailId
+    updatedTrail.location match {
+      case point: PointLocation =>
+        point.longitude must_== newTrailLong
+        point.latitude must_== newTrailLat
+    }
+  }
+
+  "Updating an existing point trail should update the correct fields" in {
     val originalTrailName = "Test"
     val originalTrailLat = 22.22
     val originalTrailLong = 33.33
