@@ -61,7 +61,6 @@ class StashStoreSpec extends Specification with BeforeEach {
   "Updating an existing line trail should update the correct fields" in {
     val originalTrailName = "Test"
     val originalTrailLine = List((1.0,1.0), (2.0,2.0), (3.0,3.0), (4.0,4.0))
-    val originalTrailLocation = Location(originalTrailLine)
     val trailId = UUID.randomUUID().toString
     db.saveTrail(new Stash(trailId, originalTrailName, Location(originalTrailLine)))
 
