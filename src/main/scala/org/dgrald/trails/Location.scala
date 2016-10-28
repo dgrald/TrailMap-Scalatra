@@ -14,3 +14,5 @@ object Location {
 case class PointLocation(longitude: Double, latitude: Double) extends Location
 
 case class LineLocation(linePoints: List[(Double, Double)]) extends Location
+
+case class PolygonLocation(polygonPoints: List[(Double, Double)]) extends Location

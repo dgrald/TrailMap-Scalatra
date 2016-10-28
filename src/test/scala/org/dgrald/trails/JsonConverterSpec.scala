@@ -29,6 +29,13 @@ class JsonConverterSpec extends Specification {
   val lineStashPointJsonArray = lineStashPoints.map(e => e match {case (first, second) => s"[$first, $second]"}).mkString(", ")
   val lineStashJson = parse(s"""{"name": "$lineStashName", "location": {"type": "LineString", "coordinates": [$lineStashPointJsonArray]}}""")
 
+  val polygonStashName = AnyRandom.string()
+  val polygonStashPoints = List((1.1, 1.1), (2.2, 2.2), (3.3, 3.3))
+  val polygonStashLocation = new PolygonLocation(polygonStashPoints)
+  val polygonStash = Stash(polygonStashName, polygonStashLocation)
+  val polygonStashPointJsonArray = polygonStashPoints.map(e => e match {case (first, second) => s"[$first, $second]"}).mkString(", ")
+  val polygonStashJson = parse(s"""{"name": "$polygonStashName", "location": {"type": "Polygon", "coordinates": [$polygonStashPointJsonArray]}}""")
+
   "Should convert a stash to JSON given a point location stash" in {
     val json = jsonConverter.createTrailJson(pointStash)
 
@@ -50,6 +57,18 @@ class JsonConverterSpec extends Specification {
     tuples must_== lineStashPoints
   }
 
+
+  "Should convert a stash to JSON given a line location stash" in {
+    val json = jsonConverter.createTrailJson(polygonStash)
+
+    (json \ "name").extract[String] must_== polygonStashName
+    val jsonLocation = json \ "location"
+    (jsonLocation \ "type").extract[String] must_== "Polygon"
+    val points = (jsonLocation \ "coordinates").extract[List[List[Double]]]
+    points.foreach(d => d.length must_== 2)
+    points.map(d => (d.head, d.last)) must_== polygonStashPoints
+  }
+
   "Should return a stash from properly formatted line stash JSON" in {
     val convertedLineStash = jsonConverter.getTrailFromJson(compact(render(lineStashJson))).get
 
@@ -68,6 +87,16 @@ class JsonConverterSpec extends Specification {
       case point: PointLocation =>
         point.longitude must_== pointLongitude
         point.latitude must_== pointLatitude
+    }
+  }
+
+  "Should return a stash from properly formatted polygon stash JSON" in {
+    val convertedPolygonStash = jsonConverter.getTrailFromJson(compact(render(polygonStashJson))).get
+
+    convertedPolygonStash.name must_== polygonStashName
+    convertedPolygonStash.location match {
+      case polygonStash: PolygonLocation =>
+        polygonStash.polygonPoints must_== polygonStashPoints
     }
   }
 
