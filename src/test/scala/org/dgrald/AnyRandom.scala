@@ -1,4 +1,4 @@
-package org.dgrald.trails
+package org.dgrald
 
 import scala.util.Random
 

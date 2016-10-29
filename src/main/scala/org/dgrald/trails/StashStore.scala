@@ -2,6 +2,7 @@ package org.dgrald.trails
 
 import com.mongodb.casbah.Imports
 import com.mongodb.casbah.Imports._
+import org.dgrald.Database
 import org.json4s.jackson.JsonMethods._
 
 /**
@@ -21,9 +22,7 @@ trait StashStore {
 
 object StashStore {
   def apply(): StashStore = {
-    val mongoClient = MongoClient(MongoClientURI("mongodb://admin:password123@ds031617.mlab.com:31617/heroku_b32xmvk7"))
-    val database = mongoClient("heroku_b32xmvk7")
-    new StashStoreImplementation(database)
+    new StashStoreImplementation(Database.connection)
   }
 
   def apply(database: MongoDB): StashStore = {

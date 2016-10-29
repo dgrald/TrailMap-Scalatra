@@ -1,24 +1,17 @@
 package org.dgrald.trails
 
-import java.security.SecureRandom
 import java.util.UUID
 
-import com.mongodb.casbah.Imports._
+import org.dgrald.{AnyRandom, TestDatabase}
 import org.specs2.mutable._
-import org.specs2.specification.BeforeEach
 
 /**
   * Created by dylangrald on 6/22/16.
   */
-class StashStoreSpec extends Specification with BeforeEach {
+class StashStoreSpec extends Specification {
 
-  val mongoClient = MongoClient("localhost", 27017)
-  val database = mongoClient("test-db-will-be-dropped")
+  val database = TestDatabase.connection("test-stash-db-will-be-dropped")
   val db = StashStore.apply(database)
-
-  def before = {
-    database.dropDatabase()
-  }
 
   "Adding a new trail point should add it to the database correctly" in {
     val newTrailName = "Test"

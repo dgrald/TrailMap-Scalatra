@@ -1,5 +1,6 @@
 package org.dgrald.trails
 
+import org.dgrald.AnyRandom
 import org.specs2.mutable.Specification
 
 /**

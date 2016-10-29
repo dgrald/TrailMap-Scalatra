@@ -1,11 +1,12 @@
 package org.dgrald.trails
 
+import org.dgrald.auth.AuthenticationSupport
 import org.scalatra._
 import org.scalatra.json._
 
 import org.json4s._
 
-class StashMap(stashStore: StashStore, jsonConverter: JsonConverter) extends StashMapStack with JacksonJsonSupport {
+class StashMap(stashStore: StashStore, jsonConverter: JsonConverter) extends StashMapStack with JacksonJsonSupport with AuthenticationSupport {
 
   implicit val jsonFormats = DefaultFormats
 
@@ -43,7 +44,7 @@ class StashMap(stashStore: StashStore, jsonConverter: JsonConverter) extends Sta
         stashStore.deleteTrail(trail)
         NoContent()
       }
-      case None => NotFound(s"Could not find a trail with the ID ${id}")
+      case None => NotFound(s"Could not find a trail with the ID $id")
     }
   }
 
