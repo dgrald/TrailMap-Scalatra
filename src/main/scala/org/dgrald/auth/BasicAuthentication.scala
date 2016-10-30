@@ -6,9 +6,7 @@ import org.scalatra.ScalatraBase
 import javax.servlet.http.{HttpServletResponse, HttpServletRequest}
 
 
-class BasicAuthentication(protected override val app: ScalatraBase, realm: String) extends BasicAuthStrategy[User](app, realm) {
-
-  val userStore = UserStore()
+class BasicAuthentication(protected override val app: ScalatraBase, realm: String, userStore: UserStore) extends BasicAuthStrategy[User](app, realm) {
 
   protected def validate(userName: String, password: String)(implicit request: HttpServletRequest, response: HttpServletResponse): Option[User] = {
     userStore.authenticate(userName, password)
@@ -20,7 +18,9 @@ class BasicAuthentication(protected override val app: ScalatraBase, realm: Strin
 trait AuthenticationSupport extends ScentrySupport[User] with BasicAuthSupport[User] {
   self: ScalatraBase =>
 
-  val realm = "Scalatra Basic Auth Example"
+  implicit val userStore: UserStore
+
+  val realm = "Scalatra Basic Auth"
 
   protected def fromSession = {
     case id: String => User(id)
@@ -39,6 +39,6 @@ trait AuthenticationSupport extends ScentrySupport[User] with BasicAuthSupport[U
   }
 
   override protected def registerAuthStrategies() = {
-    scentry.register("Basic", app => new BasicAuthentication(app, realm))
+    scentry.register("Basic", app => new BasicAuthentication(app, realm, userStore))
   }
 }

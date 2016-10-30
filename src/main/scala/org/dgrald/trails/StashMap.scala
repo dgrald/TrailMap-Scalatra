@@ -1,20 +1,22 @@
 package org.dgrald.trails
 
-import org.dgrald.auth.AuthenticationSupport
+import org.dgrald.auth.{UserStore, AuthenticationSupport}
 import org.scalatra._
 import org.scalatra.json._
 
 import org.json4s._
 
-class StashMap(stashStore: StashStore, jsonConverter: JsonConverter) extends StashMapStack with JacksonJsonSupport with AuthenticationSupport {
+class StashMap(stashStore: StashStore, jsonConverter: JsonConverter)(implicit val userStore: UserStore) extends StashMapStack with JacksonJsonSupport with AuthenticationSupport {
 
   implicit val jsonFormats = DefaultFormats
 
   post("/trails") {
+    basicAuth
     persistTrail(stashStore.saveTrail)
   }
 
   put("/trails") {
+    basicAuth
     persistTrail(stashStore.updateTrail)
   }
 
@@ -37,6 +39,7 @@ class StashMap(stashStore: StashStore, jsonConverter: JsonConverter) extends Sta
   }
 
   delete("/trails/:id") {
+    basicAuth
     val id = params("id")
     val trailOption = stashStore.getTrail(id)
     trailOption match {
@@ -45,6 +48,16 @@ class StashMap(stashStore: StashStore, jsonConverter: JsonConverter) extends Sta
         NoContent()
       }
       case None => NotFound(s"Could not find a trail with the ID $id")
+    }
+  }
+
+  post("/users") {
+    val name = params.get("name").get
+    val password = params.get("password").get
+
+    userStore.saveNewUser(name, password) match {
+      case Some(user) => Created()
+      case None => Conflict()
     }
   }
 

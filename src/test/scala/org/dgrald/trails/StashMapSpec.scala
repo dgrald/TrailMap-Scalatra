@@ -2,6 +2,9 @@ package org.dgrald.trails
 
 import java.util.UUID
 
+import org.apache.commons.codec.binary.Base64
+import org.dgrald.AnyRandom
+import org.dgrald.auth.{UserStore, User}
 import org.json4s.JsonDSL._
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
@@ -34,6 +37,15 @@ class StashMapSpec extends MutableScalatraSpec with Mockito {
 
   val trailStoreMock = mock[StashStore]
   val jsonConvererMock = mock[JsonConverter]
+  implicit val userStoreMock = mock[UserStore]
+
+  val authenticatedUser = "user"
+  val authenticatedUserPass = "pass"
+  val authenticatedUserId = UUID.randomUUID().toString
+  val authenticatedUserObject = User(authenticatedUserId, authenticatedUser)
+  val authenticatedCredentials = "Basic " + Base64.encodeBase64String(authenticatedUser + ":" + authenticatedUserPass)
+  val authHeader = Map("Authorization" -> authenticatedCredentials)
+  doReturn(Some(authenticatedUserObject)).when(userStoreMock).authenticate(any[String], any[String])
 
   private def getTrailJson(stash: Stash) = stash.location match {
     case point: PointLocation => ("name" -> stash.name) ~ ("location" -> ("longitude" -> point.longitude) ~ ("latitude" -> point.latitude))
@@ -50,7 +62,6 @@ class StashMapSpec extends MutableScalatraSpec with Mockito {
     doReturn(trail2Json).when(jsonConvererMock).createTrailJson(trail2)
     doReturn(trail3Json).when(jsonConvererMock).createTrailJson(trail3)
     doReturn(Some(trail3)).when(jsonConvererMock).getTrailFromJson(trai3JsonString)
-
   }
 
   setUpTrailStoreMock
@@ -91,7 +102,7 @@ class StashMapSpec extends MutableScalatraSpec with Mockito {
   "POST /trails" should {
 
     "return status 200 and the JSON of the new trail when sent a valid trail JSON point location" in {
-      post("/trails", compact(render(trail3Json))) {
+      post("/trails", compact(render(trail3Json)), headers = authHeader) {
         status must_== 200
         val jsonBody = parse(body)
         jsonBody \ "name" must_== JString(trail3Name)
@@ -109,8 +120,14 @@ class StashMapSpec extends MutableScalatraSpec with Mockito {
       val json = compact(render(trail3Json \ "name"))
       doReturn(None).when(jsonConvererMock).getTrailFromJson(json)
 
-      put("/trails", json) {
+      put("/trails", json, headers = authHeader) {
         status must_== 400
+      }
+    }
+
+    "return status 401 when unauthenticated" in {
+      post("/trails", compact(render(trail3Json))) {
+        status must_== 401
       }
     }
   }
@@ -118,7 +135,7 @@ class StashMapSpec extends MutableScalatraSpec with Mockito {
   "PUT /trails" should {
 
     "return status 200 and the JSON of the new trail when sent a valid trail JSON" in {
-      put("/trails", trai3JsonString) {
+      put("/trails", trai3JsonString, headers = authHeader) {
         status must_== 200
         val jsonBody = parse(body)
         jsonBody \ "name" must_== JString(trail3Name)
@@ -135,24 +152,62 @@ class StashMapSpec extends MutableScalatraSpec with Mockito {
       val json = compact(render(trail3Json \ "name"))
       doReturn(None).when(jsonConvererMock).getTrailFromJson(json)
 
-      put("/trails", json) {
+      put("/trails", json, headers = authHeader) {
         status must_== 400
+      }
+    }
+
+    "return status 401 when unauthenticated" in {
+      put("/trails", trai3JsonString) {
+        status must_== 401
       }
     }
   }
 
   "DELETE trails/:id" should {
     "delete the specified trail" in  {
-      delete("/trails/" + trail2Id) {
+      delete("/trails/" + trail2Id, headers = authHeader) {
         status must_== 204
         there was one(trailStoreMock).deleteTrail(trail2)
       }
     }
 
     "return a 404 if the specified trail is not present" in {
-      delete("/trails/" + idOfTrailThatDoesNotExist) {
+      delete("/trails/" + idOfTrailThatDoesNotExist, headers = authHeader) {
         status must_== 404
         body must_== s"Could not find a trail with the ID $idOfTrailThatDoesNotExist"
+      }
+    }
+
+    "return status 401 when unauthenticated" in {
+      delete("/trails/" + trail2Id) {
+        status must_== 401
+      }
+    }
+  }
+
+  "POST /users" should {
+    "return 200 with new user" in {
+      val newUserName = AnyRandom.string()
+      val newUserPass = AnyRandom.string()
+      val newUserId = UUID.randomUUID().toString
+
+      val user = User(newUserId, newUserName)
+      doReturn(Some(user)).when(userStoreMock).saveNewUser(newUserName, newUserPass)
+
+      post("/users", Map("name" -> newUserName, "password" -> newUserPass)) {
+        status must_== 201
+      }
+    }
+
+    "return 409 with new user that matches existing username" in {
+      val newUserName = AnyRandom.string()
+      val newUserPass = AnyRandom.string()
+
+      doReturn(None).when(userStoreMock).saveNewUser(newUserName, newUserPass)
+
+      post("/users", Map("name" -> newUserName, "password" -> newUserPass)) {
+        status must_== 409
       }
     }
   }
